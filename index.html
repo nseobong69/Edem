@@ -945,8 +945,6 @@ function resetAll() {
 }
 
 // ── LIVE MODE ────────────────────────────────
-let silentSource = null;
-
 function checkSpeechSupport() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { show('noSpeechSupport'); document.getElementById('micBtn').disabled = true; }
@@ -961,76 +959,58 @@ function startMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { toast('Not supported in this browser'); return; }
 
-  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
-    isListening = true;
-    document.getElementById('micBtn').classList.replace('idle','recording');
-    set('micLabel','textContent','Tap to Stop');
-    show('liveStatus');
-    if (!timerInt) startTimer();
+  isListening = true;
+  document.getElementById('micBtn').classList.replace('idle','recording');
+  set('micLabel','textContent','Tap to Stop');
+  show('liveStatus');
+  if (!timerInt) startTimer();
+  startFakeVol(); // animate vol bar without getUserMedia
 
-    // ── BEEP SUPPRESSION ────────────────────────────────────
-    // Chrome plays a chime on every SpeechRecognition restart.
-    // Holding a silent audio output open prevents it.
-    audioCtx = new AudioContext();
-    analyser = audioCtx.createAnalyser();
-    const micSource = audioCtx.createMediaStreamSource(stream);
-    micSource.connect(analyser);
-    const muteGain = audioCtx.createGain();
-    muteGain.gain.value = 0;
-    micSource.connect(muteGain);
-    muteGain.connect(audioCtx.destination);
+  // Attempt beep suppression via silent speech synthesis
+  try {
+    const silent = new SpeechSynthesisUtterance(' ');
+    silent.volume = 0; silent.rate = 10;
+    speechSynthesis.speak(silent);
+  } catch(_) {}
 
-    // Volume meter
-    analyser.fftSize = 256;
-    const volData = new Uint8Array(analyser.frequencyBinCount);
-    volInterval = setInterval(() => {
-      analyser.getByteFrequencyData(volData);
-      const avg = volData.reduce((a,b)=>a+b,0) / volData.length;
-      set('volFill','style.width', Math.min(100, avg * 2.5) + '%');
-    }, 80);
+  function createAndStart() {
+    if (!isListening) return;
+    const rec = new SR();
+    // continuous:false is more reliable on Android Chrome
+    rec.continuous      = false;
+    rec.interimResults  = true;
+    rec.lang            = document.getElementById('liveLang').value;
+    rec.maxAlternatives = 1;
+    recognition = rec;
 
-    // ── RECOGNITION LOOP ────────────────────────────────────
-    function createAndStart() {
-      if (!isListening) return;
-      const rec = new SR();
-      rec.continuous      = true;
-      rec.interimResults  = true;
-      rec.lang            = document.getElementById('liveLang').value;
-      rec.maxAlternatives = 1;
-      recognition = rec;
+    rec.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t + ' ';
+        else interim = t;
+      }
+      renderLiveBox(finalText, interim);
+      updateWC(finalText, 'liveWordCount');
+    };
 
-      rec.onresult = (e) => {
-        let interim = '';
-        for (let i = e.resultIndex; i < e.results.length; i++) {
-          const t = e.results[i][0].transcript;
-          if (e.results[i].isFinal) finalText += t + ' ';
-          else interim = t;
-        }
-        renderLiveBox(finalText, interim);
-        updateWC(finalText, 'liveWordCount');
-      };
+    rec.onerror = (e) => {
+      if (e.error === 'not-allowed') {
+        toast('❌ Mic access denied. Allow microphone in browser settings.');
+        stopMic();
+      }
+      // no-speech / aborted — let onend restart
+    };
 
-      rec.onerror = (e) => {
-        if (e.error === 'not-allowed') {
-          toast('❌ Mic access denied. Allow microphone in browser settings.');
-          stopMic();
-        }
-        // no-speech / aborted / network — let onend handle restart
-      };
+    rec.onend = () => {
+      if (isListening) setTimeout(createAndStart, 120);
+    };
 
-      rec.onend = () => {
-        if (isListening) setTimeout(createAndStart, 150);
-      };
+    try { rec.start(); }
+    catch(_) { if (isListening) setTimeout(createAndStart, 500); }
+  }
 
-      try { rec.start(); }
-      catch(_) { if (isListening) setTimeout(createAndStart, 400); }
-    }
-
-    createAndStart();
-
-  }).catch(() => {
-    toast('❌ Microphone access denied. Allow mic in browser settings.');
-  });
+  createAndStart();
 }
 
 function stopMic() {
@@ -1060,8 +1040,19 @@ function startTimer() {
 }
 function stopTimer() { clearInterval(timerInt); timerInt = null; }
 
+// CSS-based volume animation — no getUserMedia conflict
+function startFakeVol() {
+  let dir = 1, val = 10;
+  volInterval = setInterval(() => {
+    val += (Math.random() * 18 - 6) * dir;
+    if (val > 85) dir = -1;
+    if (val < 8)  dir = 1;
+    val = Math.max(8, Math.min(92, val));
+    set('volFill','style.width', val + '%');
+  }, 120);
+}
 function stopVolMeter() {
-  clearInterval(volInterval);
+  clearInterval(volInterval); volInterval = null;
   if (audioCtx) { audioCtx.close(); audioCtx = null; }
   set('volFill','style.width','0%');
 }
