@@ -1,0 +1,1103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EDEM — Every Word, Captured</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:       #070c17;
+      --surface:  #0d1525;
+      --surface2: #131d32;
+      --border:   #1e2d4a;
+      --gold:     #c8922a;
+      --gold2:    #e8b84b;
+      --danger:   #ff5e7a;
+      --warn:     #f0b414;
+      --text:     #e8eaf0;
+      --text2:    #6a7a9e;
+      --text3:    #333e5a;
+      --mono:     'JetBrains Mono', monospace;
+      --serif:    'Cormorant Garamond', Georgia, serif;
+      --sans:     'DM Sans', sans-serif;
+      --radius:   12px;
+      --sm:        8px;
+    }
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: var(--sans);
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center;
+      padding: 24px 16px 80px;
+      line-height: 1.6;
+    }
+
+    /* Fine diagonal grain overlay */
+    body::before {
+      content: '';
+      position: fixed; inset: 0;
+      background-image:
+        repeating-linear-gradient(
+          -45deg,
+          transparent,
+          transparent 2px,
+          rgba(200,146,42,0.015) 2px,
+          rgba(200,146,42,0.015) 4px
+        ),
+        radial-gradient(ellipse 80% 60% at 50% -10%, rgba(200,146,42,0.07) 0%, transparent 60%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .wrap { position:relative; z-index:1; width:100%; max-width:760px; display:flex; flex-direction:column; gap:18px; }
+
+    /* ─── HEADER ─── */
+    header { text-align:center; padding: 44px 0 8px; }
+
+    .logo {
+      display:inline-flex; align-items:center; gap:14px; margin-bottom:14px;
+    }
+    .logo-icon {
+      width:48px; height:48px;
+      background: linear-gradient(135deg, #1e2d4a 0%, #0d1525 100%);
+      border: 1.5px solid var(--gold);
+      border-radius: 12px;
+      display: grid; place-items: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .logo-icon::before {
+      content: '';
+      position: absolute; inset: 0;
+      background: linear-gradient(135deg, rgba(200,146,42,0.15) 0%, transparent 60%);
+    }
+    /* SVG waveform logo */
+    .logo-icon svg { position:relative; z-index:1; }
+
+    .logo-name {
+      font-family: var(--serif);
+      font-size: 42px;
+      font-weight: 700;
+      letter-spacing: 6px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #e8eaf0 20%, var(--gold2) 60%, var(--gold) 100%);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+      line-height: 1;
+    }
+
+    .tagline {
+      font-family: var(--serif);
+      font-size: 17px;
+      font-style: italic;
+      color: var(--gold2);
+      letter-spacing: 0.5px;
+      margin-bottom: 6px;
+    }
+    .byline {
+      font-size: 11px;
+      color: var(--text3);
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Gold divider */
+    .gold-divider {
+      width: 60px; height: 1px;
+      background: linear-gradient(90deg, transparent, var(--gold), transparent);
+      margin: 12px auto 0;
+    }
+
+    /* ─── MODE TABS ─── */
+    .tabs {
+      display:flex; gap:6px;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:6px;
+    }
+    .tab {
+      flex:1; display:flex; align-items:center; justify-content:center; gap:8px;
+      padding:12px 10px; border-radius:var(--sm); border:none;
+      font-family:var(--sans); font-size:14px; font-weight:600;
+      cursor:pointer; transition:all 0.2s; color:var(--text2); background:transparent;
+    }
+    .tab.active {
+      background:var(--surface2); color:var(--text);
+      border:1px solid var(--gold);
+      box-shadow: 0 0 12px rgba(200,146,42,0.1);
+    }
+    .tab .tab-icon { font-size:18px; }
+    .tab-sub { font-size:11px; font-weight:400; color:var(--text3); display:block; }
+    .tab.active .tab-sub { color:var(--text2); }
+
+    /* ─── CARD ─── */
+    .card {
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:22px;
+      position: relative;
+    }
+    .card::before {
+      content: '';
+      position: absolute; top:0; left:24px; right:24px; height:1px;
+      background: linear-gradient(90deg, transparent, rgba(200,146,42,0.2), transparent);
+    }
+    .card-title {
+      font-size:11px; font-weight:600; letter-spacing:2px;
+      text-transform:uppercase; color:var(--text2); margin-bottom:14px;
+      display: flex; align-items: center; gap: 8px;
+    }
+    .card-title-serif {
+      font-family: var(--serif); font-size: 15px; font-style: italic;
+      font-weight: 600; letter-spacing: 0; text-transform: none;
+      color: var(--gold2);
+    }
+    .step {
+      display:inline-flex; align-items:center; justify-content:center;
+      width:20px; height:20px;
+      background: linear-gradient(135deg, rgba(200,146,42,0.2), rgba(200,146,42,0.05));
+      border:1px solid rgba(200,146,42,0.35);
+      border-radius:50%; font-size:10px; font-weight:700;
+      color:var(--gold2); margin-right:7px;
+      font-family:var(--mono); vertical-align:middle;
+    }
+
+    /* ─── ENGINE GRID (was model-grid) ─── */
+    .model-grid { display:grid; grid-template-columns:1fr 1fr; gap:8px; }
+    @media(max-width:480px){ .model-grid{grid-template-columns:1fr;} }
+    .model-opt { position:relative; cursor:pointer; }
+    .model-opt input[type="radio"] { position:absolute; opacity:0; width:0; height:0; }
+    .model-lbl {
+      display:flex; flex-direction:column; gap:3px;
+      padding:12px 14px; background:var(--surface2);
+      border:1.5px solid var(--border); border-radius:var(--sm); cursor:pointer;
+      transition:border-color 0.15s, background 0.15s;
+    }
+    .model-opt input:checked + .model-lbl {
+      border-color: var(--gold);
+      background: rgba(200,146,42,0.06);
+    }
+    .model-opt input:checked + .model-lbl .mn { color:var(--gold2); }
+    .mn { font-size:13px; font-weight:600; font-family:var(--mono); }
+    .md { font-size:11px; color:var(--text2); }
+    .tags { display:flex; gap:4px; flex-wrap:wrap; margin-top:3px; }
+    .tag { font-size:10px; font-family:var(--mono); padding:1px 6px; border-radius:20px; font-weight:500; }
+    .tg { background:rgba(200,146,42,.12); color:var(--gold2); }
+    .tp { background:rgba(232,184,75,.1); color:#d4b06a; }
+    .tw { background:rgba(240,180,20,.12); color:var(--warn); }
+    .tr { background:rgba(255,94,122,.12); color:var(--danger); }
+
+    /* ─── SELECT ─── */
+    .sel-wrap { position:relative; }
+    select {
+      width:100%; appearance:none; background:var(--surface2); border:1.5px solid var(--border);
+      color:var(--text); padding:10px 34px 10px 13px; border-radius:var(--sm);
+      font-family:var(--sans); font-size:14px; cursor:pointer; outline:none; transition:border-color 0.15s;
+    }
+    select:focus { border-color:var(--gold); }
+    .arr { position:absolute; right:11px; top:50%; transform:translateY(-50%); color:var(--text2); pointer-events:none; font-size:10px; }
+
+    /* ─── DROP ZONE ─── */
+    #dropzone {
+      border:2px dashed var(--border); border-radius:var(--radius);
+      padding:36px 20px; text-align:center; cursor:pointer;
+      transition:border-color 0.2s, background 0.2s; position:relative;
+    }
+    #dropzone.over, #dropzone:hover {
+      border-color:var(--gold);
+      background:rgba(200,146,42,.03);
+    }
+    #dropzone input { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .dz-icon { font-size:36px; margin-bottom:8px; display:block; }
+    .dz-main { font-size:15px; font-weight:600; margin-bottom:4px; }
+    .dz-sub  { font-size:13px; color:var(--text2); }
+    .dz-fmt  { margin-top:8px; font-size:11px; font-family:var(--mono); color:var(--text3); }
+
+    /* ─── FILE PILL ─── */
+    .file-pill {
+      display:flex; align-items:center; gap:10px; background:var(--surface2);
+      border:1px solid var(--border); border-radius:var(--sm); padding:10px 14px; margin-top:12px;
+    }
+    .fp-icon { font-size:22px; flex-shrink:0; }
+    .fp-detail { flex:1; min-width:0; }
+    .fp-name { font-size:14px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+    .fp-meta { font-size:12px; color:var(--text2); font-family:var(--mono); }
+    .fp-rm { background:none; border:1px solid var(--border); color:var(--text2); padding:4px 10px; border-radius:6px; font-size:12px; cursor:pointer; flex-shrink:0; transition:all 0.15s; }
+    .fp-rm:hover { border-color:var(--danger); color:var(--danger); }
+
+    /* ─── ALERTS ─── */
+    .alert { display:flex; gap:10px; padding:11px 14px; border-radius:var(--sm); font-size:13px; line-height:1.5; }
+    .aw { background:rgba(240,180,20,.08); border:1px solid rgba(240,180,20,.2); color:var(--warn); }
+    .ai { background:rgba(200,146,42,.07); border:1px solid rgba(200,146,42,.2); color:var(--gold2); }
+    .ap { background:rgba(100,120,200,.08); border:1px solid rgba(100,120,200,.2); color:#8899cc; }
+
+    /* ─── BUTTONS ─── */
+    .btn {
+      display:inline-flex; align-items:center; justify-content:center; gap:7px;
+      padding:12px 26px; border-radius:var(--sm); font-family:var(--sans);
+      font-size:15px; font-weight:600; cursor:pointer; transition:all 0.15s; border:none;
+      letter-spacing:-0.2px;
+    }
+    .btn-a {
+      background: linear-gradient(135deg, var(--gold) 0%, var(--gold2) 100%);
+      color: #0a0f1e;
+      font-weight: 700;
+      box-shadow: 0 4px 16px rgba(200,146,42,0.25);
+    }
+    .btn-a:hover { opacity:.9; box-shadow: 0 6px 20px rgba(200,146,42,0.35); transform: translateY(-1px); }
+    .btn-a:active { transform:scale(.97) translateY(0); }
+    .btn-a:disabled { opacity:.35; cursor:not-allowed; transform:none; box-shadow: none; }
+    .btn-b { background:var(--surface2); color:var(--text); border:1.5px solid var(--border); font-size:14px; padding:10px 18px; }
+    .btn-b:hover { border-color:var(--gold); background:rgba(200,146,42,.05); }
+    .btn-red { background:rgba(255,94,122,.15); color:var(--danger); border:1.5px solid rgba(255,94,122,.3); font-size:14px; padding:10px 18px; }
+    .btn-red:hover { background:rgba(255,94,122,.25); }
+
+    /* ─── PROGRESS ─── */
+    .bar-wrap { background:var(--surface2); border-radius:4px; height:5px; overflow:hidden; }
+    .bar-fill { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:4px; transition:width 0.3s; }
+    .bar-lbl { font-size:11px; font-family:var(--mono); color:var(--text3); margin-top:4px; }
+
+    /* ─── STATUS ─── */
+    .status-row { display:flex; align-items:center; gap:9px; font-size:13px; color:var(--text2); font-family:var(--mono); flex-wrap:wrap; }
+    .pulse { width:8px; height:8px; border-radius:50%; background:var(--gold); animation:pulse 1.2s ease-in-out infinite; flex-shrink:0; }
+    @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)} }
+
+    /* ─── WAVE BARS ─── */
+    .wave { display:flex; gap:3px; align-items:flex-end; height:18px; }
+    .wave span { display:block; width:3px; background:var(--gold); border-radius:2px; animation:wv .8s ease-in-out infinite alternate; }
+    .wave span:nth-child(1){animation-delay:.0s;height:8px}
+    .wave span:nth-child(2){animation-delay:.15s;height:15px}
+    .wave span:nth-child(3){animation-delay:.3s;height:10px}
+    .wave span:nth-child(4){animation-delay:.45s;height:17px}
+    .wave span:nth-child(5){animation-delay:.6s;height:6px}
+    @keyframes wv{from{transform:scaleY(.3)}to{transform:scaleY(1)}}
+
+    /* ─── LIVE MIC ─── */
+    .mic-display {
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--radius);
+      padding:20px; min-height:200px; max-height:420px; overflow-y:auto;
+      font-family:var(--mono); font-size:14px; line-height:1.9;
+      white-space:pre-wrap; word-break:break-word;
+    }
+    .mic-display:empty::before {
+      content:'Tap "Start Listening" — speak clearly and your words will appear here in real time.';
+      color:var(--text3); font-style:italic;
+    }
+    .interim { color: #8899cc; font-style:italic; opacity:.8; }
+
+    .mic-btn-wrap { display:flex; flex-direction:column; align-items:center; gap:14px; padding:20px 0 10px; }
+    .mic-big {
+      width:88px; height:88px; border-radius:50%; border:none; cursor:pointer;
+      font-size:32px; display:grid; place-items:center;
+      transition:all 0.2s; position:relative;
+    }
+    .mic-big.idle {
+      background:var(--surface2);
+      border:2px solid var(--border);
+    }
+    .mic-big.idle:hover { border-color:var(--gold); transform:scale(1.04); box-shadow: 0 0 20px rgba(200,146,42,0.2); }
+    .mic-big.recording {
+      background:rgba(255,94,122,.15);
+      border:2px solid var(--danger);
+      animation:ring 1.5s ease-in-out infinite;
+    }
+    @keyframes ring {
+      0%,100% { box-shadow:0 0 0 0 rgba(255,94,122,.4); }
+      50%      { box-shadow:0 0 0 14px rgba(255,94,122,0); }
+    }
+    .mic-label { font-size:14px; color:var(--text2); font-weight:600; }
+    .mic-timer { font-size:22px; font-family:var(--mono); font-weight:600; color:var(--gold2); min-height:30px; }
+
+    .vol-meter { width:100%; height:6px; background:var(--surface2); border-radius:3px; overflow:hidden; }
+    .vol-fill   { height:100%; background:linear-gradient(90deg,var(--gold),var(--gold2)); border-radius:3px; transition:width .1s; width:0%; }
+
+    /* ─── TRANSCRIPT BOX ─── */
+    .transcript-box {
+      background:var(--bg); border:1px solid var(--border); border-radius:var(--sm);
+      padding:14px; min-height:140px; max-height:380px; overflow-y:auto;
+      font-family:var(--mono); font-size:14px; line-height:1.8;
+      color:var(--text); white-space:pre-wrap; word-break:break-word;
+      resize:vertical;
+    }
+    .transcript-box:empty::before { content:'Your capture will appear here…'; color:var(--text3); font-style:italic; }
+    .transcript-box:focus { outline:none; border-color:var(--gold); }
+
+    /* ─── TOOLBAR ─── */
+    .toolbar { display:flex; gap:8px; flex-wrap:wrap; align-items:center; margin-top:10px; }
+    .spacer { flex:1; }
+    .wc { font-size:12px; color:var(--text2); font-family:var(--mono); }
+
+    /* ─── TIMESTAMPS ─── */
+    .ts-list { background:var(--bg); border:1px solid var(--border); border-radius:var(--sm); padding:10px; max-height:220px; overflow-y:auto; }
+    .ts-row { display:flex; gap:12px; padding:5px 0; border-bottom:1px solid var(--surface2); font-size:13px; }
+    .ts-row:last-child { border-bottom:none; }
+    .ts-t { font-family:var(--mono); color:var(--gold2); font-size:11px; min-width:80px; padding-top:2px; flex-shrink:0; }
+
+    /* ─── ACCORDION ─── */
+    details { background:var(--surface); border:1px solid var(--border); border-radius:var(--radius); overflow:hidden; }
+    summary { padding:16px 22px; cursor:pointer; font-weight:600; font-size:14px; list-style:none; display:flex; align-items:center; justify-content:space-between; color:var(--text2); }
+    summary::-webkit-details-marker { display:none; }
+    summary::after { content:'▸'; transition:transform .2s; }
+    details[open] summary::after { transform:rotate(90deg); }
+    details[open] summary { color:var(--text); }
+    .db { padding:0 22px 22px; font-size:14px; color:var(--text2); line-height:1.8; }
+
+    .pc-grid { display:grid; grid-template-columns:1fr 1fr; gap:12px; margin-top:14px; }
+    @media(max-width:480px){.pc-grid{grid-template-columns:1fr;}}
+    .pc { padding:14px; border-radius:var(--sm); }
+    .pro-c { background:rgba(200,146,42,.06); border:1px solid rgba(200,146,42,.15); }
+    .con-c { background:rgba(255,94,122,.06); border:1px solid rgba(255,94,122,.15); }
+    .pc h4 { font-size:13px; margin-bottom:8px; }
+    .pro-c h4 { color:var(--gold2); } .con-c h4 { color:var(--danger); }
+    .pc li { color:var(--text2); padding:2px 0 2px 15px; position:relative; font-size:13px; }
+    .pro-c li::before { content:'✓'; position:absolute; left:0; color:var(--gold); font-weight:700; }
+    .con-c li::before { content:'✗'; position:absolute; left:0; color:var(--danger); font-weight:700; }
+
+    .deploy-step { display:flex; gap:12px; padding:14px 0; border-bottom:1px solid var(--surface2); }
+    .deploy-step:last-child { border-bottom:none; }
+    .ds-num { width:28px; height:28px; border-radius:50%; background:linear-gradient(135deg,var(--gold),var(--gold2)); color:#0a0f1e; font-weight:700; font-size:13px; display:grid; place-items:center; flex-shrink:0; font-family:var(--mono); }
+    .ds-content { flex:1; }
+    .ds-title { font-weight:600; color:var(--text); font-size:14px; margin-bottom:3px; }
+    .ds-desc { font-size:13px; color:var(--text2); line-height:1.6; }
+    code { font-family:var(--mono); font-size:12px; background:var(--surface2); padding:2px 6px; border-radius:4px; color:var(--gold2); }
+
+    /* ─── TOAST ─── */
+    #toast {
+      position:fixed; bottom:24px; left:50%;
+      transform:translateX(-50%) translateY(16px);
+      background:var(--surface2); border:1px solid var(--gold);
+      color:var(--text); padding:9px 20px; border-radius:100px;
+      font-size:13px; opacity:0; pointer-events:none;
+      transition:opacity .2s, transform .2s; z-index:999; white-space:nowrap;
+      box-shadow: 0 4px 20px rgba(200,146,42,0.15);
+    }
+    #toast.show { opacity:1; transform:translateX(-50%) translateY(0); }
+
+    .hidden { display:none !important; }
+    ::-webkit-scrollbar { width:5px; }
+    ::-webkit-scrollbar-thumb { background:var(--border); border-radius:3px; }
+    .flex-row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    hr.dim { border:none; border-top:1px solid var(--border); margin: 8px 0; }
+
+    /* ─── FOOTER ─── */
+    .footer-note {
+      text-align: center;
+      font-family: var(--serif);
+      font-style: italic;
+      font-size: 13px;
+      color: var(--text3);
+      padding-top: 4px;
+      letter-spacing: 0.3px;
+    }
+    .footer-note a { color: var(--text3); text-decoration: none; transition: color 0.15s; }
+    .footer-note a:hover { color: var(--gold); }
+  </style>
+</head>
+<body>
+<div class="wrap">
+
+<!-- ═══════════════════════════════════ -->
+<!-- HEADER                             -->
+<!-- ═══════════════════════════════════ -->
+<header>
+  <div class="logo">
+    <div class="logo-icon">
+      <!-- Waveform SVG -->
+      <svg width="26" height="22" viewBox="0 0 26 22" fill="none">
+        <rect x="0" y="8" width="2.5" height="6" rx="1.25" fill="#c8922a"/>
+        <rect x="4" y="4" width="2.5" height="14" rx="1.25" fill="#e8b84b"/>
+        <rect x="8" y="1" width="2.5" height="20" rx="1.25" fill="#c8922a"/>
+        <rect x="12" y="5" width="2.5" height="12" rx="1.25" fill="#e8b84b"/>
+        <rect x="16" y="2" width="2.5" height="18" rx="1.25" fill="#c8922a"/>
+        <rect x="20" y="6" width="2.5" height="10" rx="1.25" fill="#e8b84b"/>
+        <rect x="24" y="9" width="2.5" height="5" rx="1.25" fill="#c8922a"/>
+      </svg>
+    </div>
+    <span class="logo-name">EDEM</span>
+  </div>
+  <p class="tagline">Every word, captured.</p>
+  <p class="byline">Designed by Nseobong Edem for everyday use</p>
+  <div class="gold-divider"></div>
+</header>
+
+<!-- Mode Tabs -->
+<div class="tabs">
+  <button class="tab active" id="tab-file" onclick="switchMode('file')">
+    <span class="tab-icon">🎵</span>
+    <span>
+      Audio &amp; Video
+      <span class="tab-sub">mp3, mp4, wav…</span>
+    </span>
+  </button>
+  <button class="tab" id="tab-live" onclick="switchMode('live')">
+    <span class="tab-icon">🔴</span>
+    <span>
+      Live Capture
+      <span class="tab-sub">Real-time voice</span>
+    </span>
+  </button>
+</div>
+
+<!-- ═══════════════════════════════════ -->
+<!-- FILE MODE                          -->
+<!-- ═══════════════════════════════════ -->
+<div id="mode-file">
+
+  <!-- Step 1: Engine -->
+  <div class="card">
+    <div class="card-title"><span class="step">1</span>Choose Engine <span class="card-title-serif" style="margin-left:auto;">Precision level</span></div>
+    <div class="model-grid">
+      <label class="model-opt">
+        <input type="radio" name="model" value="Xenova/whisper-tiny.en">
+        <div class="model-lbl">
+          <span class="mn">Swift</span>
+          <span class="md">Fastest. Basic accuracy.</span>
+          <div class="tags"><span class="tag tg">~39 MB</span><span class="tag tg">Fastest</span><span class="tag tw">English only</span></div>
+        </div>
+      </label>
+      <label class="model-opt">
+        <input type="radio" name="model" value="Xenova/whisper-base.en" checked>
+        <div class="model-lbl">
+          <span class="mn">Balanced ⭐</span>
+          <span class="md">Best balance. Start here.</span>
+          <div class="tags"><span class="tag tg">~74 MB</span><span class="tag tg">Fast</span><span class="tag tw">English only</span></div>
+        </div>
+      </label>
+      <label class="model-opt">
+        <input type="radio" name="model" value="Xenova/whisper-small">
+        <div class="model-lbl">
+          <span class="mn">Sharp</span>
+          <span class="md">Better accuracy + languages.</span>
+          <div class="tags"><span class="tag tw">~244 MB</span><span class="tag tp">Multilingual</span><span class="tag tw">Slower</span></div>
+        </div>
+      </label>
+      <label class="model-opt">
+        <input type="radio" name="model" value="Xenova/whisper-medium">
+        <div class="model-lbl">
+          <span class="mn">Precise</span>
+          <span class="md">Best accuracy, very slow.</span>
+          <div class="tags"><span class="tag tr">~769 MB</span><span class="tag tp">Multilingual</span><span class="tag tr">Very slow</span></div>
+        </div>
+      </label>
+    </div>
+    <div style="margin-top:14px;" class="flex-row">
+      <button class="btn btn-a" id="loadBtn" onclick="loadModel()">⬇ Load Engine</button>
+      <div id="modelStatus" class="status-row hidden">
+        <div class="pulse"></div><span id="modelStatusText">Downloading…</span>
+      </div>
+    </div>
+    <div id="dlProgress" class="hidden" style="margin-top:10px;">
+      <div class="bar-wrap"><div class="bar-fill" id="dlBar" style="width:0%"></div></div>
+      <div class="bar-lbl" id="dlLbl">0%</div>
+    </div>
+    <div id="modelReady" class="alert ai hidden" style="margin-top:12px;">
+      <span>✓</span><span>Engine ready — cached for instant loads next time.</span>
+    </div>
+  </div>
+
+  <!-- Step 2: Settings -->
+  <div class="card">
+    <div class="card-title"><span class="step">2</span>Language &amp; Options</div>
+    <div class="flex-row">
+      <div class="sel-wrap" style="max-width:230px; flex:1;">
+        <select id="langSelect">
+          <option value="">Auto-detect language</option>
+          <option value="english" selected>English</option>
+          <option value="spanish">Spanish / Español</option>
+          <option value="french">French / Français</option>
+          <option value="german">German / Deutsch</option>
+          <option value="portuguese">Portuguese</option>
+          <option value="arabic">Arabic / العربية</option>
+          <option value="chinese">Chinese / 中文</option>
+          <option value="japanese">Japanese</option>
+          <option value="russian">Russian</option>
+          <option value="hindi">Hindi / हिन्दी</option>
+          <option value="yoruba">Yoruba</option>
+          <option value="igbo">Igbo</option>
+          <option value="hausa">Hausa</option>
+        </select>
+        <span class="arr">▾</span>
+      </div>
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer;font-size:14px;color:var(--text2);">
+        <input type="checkbox" id="tsCheck" checked style="accent-color:var(--gold);width:15px;height:15px;">
+        Timestamps
+      </label>
+    </div>
+  </div>
+
+  <!-- Step 3: Upload -->
+  <div class="card">
+    <div class="card-title"><span class="step">3</span>Upload Audio / Video</div>
+    <div id="dropzone" ondragover="dzOver(event)" ondragleave="dzLeave(event)" ondrop="dzDrop(event)">
+      <input type="file" id="fileInput" accept="audio/*,video/*" onchange="pickFile(this.files[0])">
+      <span class="dz-icon">🎵</span>
+      <div class="dz-main">Drop your file here or tap to browse</div>
+      <div class="dz-sub">Audio or video — any format</div>
+      <div class="dz-fmt">mp3 · mp4 · wav · m4a · ogg · webm · aac · flac · mkv · mov · avi</div>
+    </div>
+    <div id="filePill" class="file-pill hidden">
+      <span class="fp-icon" id="fpIcon">🎵</span>
+      <div class="fp-detail">
+        <div class="fp-name" id="fpName">—</div>
+        <div class="fp-meta" id="fpMeta">—</div>
+      </div>
+      <button class="fp-rm" onclick="clearFile()">Remove</button>
+    </div>
+    <div id="sizeWarn" class="alert aw hidden" style="margin-top:10px;">
+      ⚠ <span>Large file. May be slow or crash the browser tab. Consider compressing first with HandBrake (free).</span>
+    </div>
+  </div>
+
+  <!-- Step 4: Capture -->
+  <div class="card">
+    <div class="card-title"><span class="step">4</span>Capture</div>
+    <div class="flex-row">
+      <button class="btn btn-a" id="transcribeBtn" onclick="startTranscription()" disabled>▶ Start Capture</button>
+      <button class="btn btn-red hidden" id="cancelBtn" onclick="cancelIt()">✕ Cancel</button>
+    </div>
+    <div id="procArea" class="hidden" style="margin-top:18px;">
+      <div class="flex-row" style="margin-bottom:8px;">
+        <div class="wave"><span></span><span></span><span></span><span></span><span></span></div>
+        <span style="font-size:13px;color:var(--text2);font-family:var(--mono);">Processing…</span>
+        <span style="flex:1;"></span>
+        <span id="chunkInfo" style="font-size:11px;color:var(--text3);font-family:var(--mono);"></span>
+      </div>
+      <div class="bar-wrap"><div class="bar-fill" id="txBar" style="width:0%"></div></div>
+      <div class="bar-lbl" id="txLbl">0%</div>
+      <p style="font-size:12px;color:var(--text3);margin-top:6px;">⚠ Keep this tab open and active while it runs.</p>
+    </div>
+  </div>
+
+  <!-- Results -->
+  <div id="resultsCard" class="card hidden">
+    <div class="card-title">📄 <span class="card-title-serif">Your Capture</span></div>
+    <div id="txBox" class="transcript-box" contenteditable="true"></div>
+    <div class="toolbar">
+      <button class="btn btn-b" onclick="copyTx()">📋 Copy</button>
+      <button class="btn btn-b" onclick="dlTxt()">⬇ Download .txt</button>
+      <div class="spacer"></div>
+      <span class="wc" id="wordCount">0 words</span>
+    </div>
+    <div id="tsSection" class="hidden" style="margin-top:18px;">
+      <div class="card-title" style="margin-bottom:8px;">⏱ Timestamps</div>
+      <div class="ts-list" id="tsBody"></div>
+    </div>
+    <div style="margin-top:14px; text-align:center;">
+      <button class="btn btn-b" style="font-size:13px;" onclick="resetAll()">🔄 Capture Another File</button>
+    </div>
+  </div>
+
+</div><!-- end mode-file -->
+
+
+<!-- ═══════════════════════════════════ -->
+<!-- LIVE MODE                          -->
+<!-- ═══════════════════════════════════ -->
+<div id="mode-live" class="hidden">
+
+  <!-- Browser notice -->
+  <div id="liveBrowserNote" class="alert ap">
+    ℹ <span><strong>Live Capture uses your device's built-in voice engine</strong> — instant and works great on phones. Chrome and Edge perform best. Safari has partial support. Nothing is saved permanently.</span>
+  </div>
+
+  <!-- Language -->
+  <div class="card">
+    <div class="card-title">🌍 Voice Language</div>
+    <div class="sel-wrap" style="max-width:240px;">
+      <select id="liveLang">
+        <option value="en-US" selected>English (US)</option>
+        <option value="en-GB">English (UK)</option>
+        <option value="es-ES">Spanish</option>
+        <option value="fr-FR">French</option>
+        <option value="de-DE">German</option>
+        <option value="pt-BR">Portuguese (Brazil)</option>
+        <option value="ar-SA">Arabic</option>
+        <option value="zh-CN">Chinese (Mandarin)</option>
+        <option value="ja-JP">Japanese</option>
+        <option value="ru-RU">Russian</option>
+        <option value="hi-IN">Hindi</option>
+        <option value="yo-NG">Yoruba</option>
+      </select>
+      <span class="arr">▾</span>
+    </div>
+  </div>
+
+  <!-- Big Mic button card -->
+  <div class="card" style="text-align:center;">
+    <div class="mic-btn-wrap">
+      <div class="mic-timer" id="liveTimer">00:00</div>
+      <button class="mic-big idle" id="micBtn" onclick="toggleMic()">🎙️</button>
+      <div class="mic-label" id="micLabel">Tap to Start Listening</div>
+      <div style="width:100%; max-width:300px;">
+        <div class="vol-meter"><div class="vol-fill" id="volFill"></div></div>
+      </div>
+      <div id="liveStatus" class="status-row hidden" style="justify-content:center;">
+        <div class="pulse"></div>
+        <span>Listening…</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Live transcript display -->
+  <div class="card">
+    <div class="card-title" style="display:flex;align-items:center;justify-content:space-between;">
+      <span>📝 <span class="card-title-serif">Live Capture</span></span>
+      <button class="btn btn-b" style="padding:5px 12px;font-size:12px;" onclick="clearLive()">Clear</button>
+    </div>
+    <div id="liveBox" class="mic-display"></div>
+    <div class="toolbar" style="margin-top:10px;">
+      <button class="btn btn-b" onclick="copyLive()">📋 Copy</button>
+      <button class="btn btn-b" onclick="dlLive()">⬇ Download .txt</button>
+      <div class="spacer"></div>
+      <span class="wc" id="liveWordCount">0 words</span>
+    </div>
+  </div>
+
+  <!-- No support warning -->
+  <div id="noSpeechSupport" class="alert aw hidden">
+    ⚠ <span>Your browser doesn't support live voice capture. Please use <strong>Google Chrome</strong> or <strong>Microsoft Edge</strong> — they work best. Safari on iPhone has partial support.</span>
+  </div>
+
+</div><!-- end mode-live -->
+
+
+<!-- ═══════════════════════════════════ -->
+<!-- INFO ACCORDION                     -->
+<!-- ═══════════════════════════════════ -->
+<details>
+  <summary>📖 How It Works &amp; Deployment Guide</summary>
+  <div class="db">
+
+    <p style="margin-bottom:12px;">
+      <strong style="color:var(--text);">Does my file stay on my device?</strong><br>
+      Yes — for <em>Audio &amp; Video mode</em>, your file is processed entirely inside your browser. Nothing is sent anywhere. Phones are slower for file processing — a laptop or desktop is much better.<br><br>
+      For <em>Live Capture mode</em>, your voice is processed by your browser's built-in speech engine. On Chrome, this is sent briefly to Google's servers — but not stored permanently.
+    </p>
+
+    <hr class="dim">
+    <p style="margin:12px 0 8px;"><strong style="color:var(--text);">Audio &amp; Video vs Live Capture — which should I use?</strong></p>
+    <div class="pc-grid">
+      <div class="pc pro-c">
+        <h4>🎵 Audio &amp; Video</h4>
+        <ul style="list-style:none;padding:0;">
+          <li>Works on any audio/video file</li>
+          <li>Fully offline after engine loads</li>
+          <li>Better accuracy (90–95%)</li>
+          <li>Timestamps included</li>
+          <li>Audio never leaves device</li>
+        </ul>
+      </div>
+      <div class="pc pro-c" style="background:rgba(100,120,200,.06);border-color:rgba(100,120,200,.15);">
+        <h4 style="color:#8899cc;">🔴 Live Capture</h4>
+        <ul style="list-style:none;padding:0;">
+          <li style="color:var(--text2);">Instant — no engine download</li>
+          <li style="color:var(--text2);">Works great on phones</li>
+          <li style="color:var(--text2);">Real-time as you speak</li>
+          <li style="color:var(--text2);">Good for meetings, notes</li>
+          <li style="color:var(--text2);">Needs internet + Chrome/Edge</li>
+        </ul>
+      </div>
+    </div>
+
+    <hr class="dim" style="margin:16px 0;">
+    <p style="margin-bottom:12px;"><strong style="color:var(--text);">Is it 100% accurate?</strong><br>
+    No tool is truly 100%. The Balanced engine gives ~88–93% accuracy on clear speech. Live Capture is about 85–90%. Background noise, fast speech, and accents reduce accuracy. Always review the output.</p>
+
+    <hr class="dim" style="margin:16px 0;">
+    <p style="margin-bottom:14px;"><strong style="color:var(--text); font-size:16px;">🚀 Deploy for Free (GitHub Pages)</strong></p>
+
+    <div>
+      <div class="deploy-step">
+        <div class="ds-num">1</div>
+        <div class="ds-content">
+          <div class="ds-title">Create a free GitHub account</div>
+          <div class="ds-desc">Go to <code>github.com</code> → Sign Up. It's free. Use any email.</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="ds-num">2</div>
+        <div class="ds-content">
+          <div class="ds-title">Create a new repository</div>
+          <div class="ds-desc">Click the <code>+</code> icon → "New repository". Name it anything (e.g. <code>edem</code>). Set it to <strong>Public</strong>. Click "Create repository".</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="ds-num">3</div>
+        <div class="ds-content">
+          <div class="ds-title">Upload the HTML file</div>
+          <div class="ds-desc">On your new repo page, click <code>Add file → Upload files</code>. Drag in this HTML file. Rename it to <code>index.html</code>. Click "Commit changes".</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="ds-num">4</div>
+        <div class="ds-content">
+          <div class="ds-title">Turn on GitHub Pages</div>
+          <div class="ds-desc">Go to <code>Settings → Pages</code> (left sidebar). Under "Source", select <code>Deploy from branch</code>. Choose <code>main</code> branch, folder <code>/ (root)</code>. Click Save.</div>
+        </div>
+      </div>
+      <div class="deploy-step">
+        <div class="ds-num">5</div>
+        <div class="ds-content">
+          <div class="ds-title">Your app is live!</div>
+          <div class="ds-desc">Wait ~60 seconds. Your URL will be: <code>yourusername.github.io/edem</code>. Share this link with anyone — works on any phone or computer, completely free.</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="alert ai" style="margin-top:14px;">
+      💡 That's it! No coding needed. EDEM is now a real website anyone can use. Update it anytime by uploading a new HTML file.
+    </div>
+
+  </div>
+</details>
+
+<p class="footer-note">
+  Designed by <strong>Nseobong Edem</strong> for everyday use &nbsp;·&nbsp;
+  <a href="https://github.com/xenova/transformers.js" target="_blank">Powered by transformers.js</a>
+</p>
+
+</div><!-- wrap -->
+<div id="toast"></div>
+
+<!-- ═══════════════════════════════════════════════════════ -->
+<script type="module">
+import { pipeline, env } from 'https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2';
+env.allowLocalModels = false;
+
+// ── State ──────────────────────────────────
+let transcriber  = null;
+let pickedFile   = null;
+let cancelled    = false;
+let allChunks    = [];
+
+// Live mic state
+let recognition  = null;
+let isListening  = false;
+let finalText    = '';
+let timerInt     = null;
+let elapsed      = 0;
+let audioCtx     = null;
+let analyser     = null;
+let volInterval  = null;
+
+// ── Expose to window ────────────────────────
+Object.assign(window, {
+  switchMode, loadModel, dzOver, dzLeave, dzDrop, pickFile,
+  clearFile, startTranscription, cancelIt, resetAll,
+  copyTx, dlTxt, toggleMic, clearLive, copyLive, dlLive
+});
+
+// ── Tab switching ────────────────────────────
+function switchMode(m) {
+  document.getElementById('mode-file').classList.toggle('hidden', m !== 'file');
+  document.getElementById('mode-live').classList.toggle('hidden', m !== 'live');
+  document.getElementById('tab-file').classList.toggle('active', m === 'file');
+  document.getElementById('tab-live').classList.toggle('active', m === 'live');
+  if (m === 'live') checkSpeechSupport();
+}
+
+// ── FILE MODE: Load model ───────────────────
+async function loadModel() {
+  const modelId = document.querySelector('input[name="model"]:checked').value;
+  const btn = document.getElementById('loadBtn');
+  btn.disabled = true; btn.textContent = '⏳ Loading…';
+  show('modelStatus'); show('dlProgress'); hide('modelReady');
+
+  try {
+    transcriber = await pipeline('automatic-speech-recognition', modelId, {
+      progress_callback: (d) => {
+        const pct = d.progress ? Math.round(d.progress) : 0;
+        if (d.status === 'downloading') {
+          set('dlBar', 'style.width', pct + '%');
+          set('dlLbl', 'textContent', `Downloading ${d.file || ''} — ${pct}%`);
+          set('modelStatusText', 'textContent', `Downloading (${pct}%)…`);
+        } else if (d.status === 'loading') {
+          set('modelStatusText', 'textContent', 'Loading into memory…');
+          set('dlBar', 'style.width', '100%');
+        }
+      }
+    });
+    hide('modelStatus'); hide('dlProgress'); show('modelReady');
+    btn.textContent = '✓ Loaded';
+    btn.style.cssText = 'background:rgba(200,146,42,.12);color:var(--gold2);border:1.5px solid rgba(200,146,42,.3);';
+    refreshTxBtn();
+    toast('Engine ready!');
+  } catch(e) {
+    console.error(e);
+    hide('modelStatus'); hide('dlProgress');
+    btn.disabled = false; btn.textContent = '⬇ Load Engine';
+    toast('❌ Failed — check your internet connection');
+  }
+}
+
+// ── FILE MODE: File handling ─────────────────
+function dzOver(e) { e.preventDefault(); document.getElementById('dropzone').classList.add('over'); }
+function dzLeave()  { document.getElementById('dropzone').classList.remove('over'); }
+function dzDrop(e)  { e.preventDefault(); dzLeave(); const f = e.dataTransfer.files[0]; if(f) pickFile(f); }
+function pickFile(f) {
+  if(!f) return;
+  pickedFile = f;
+  const vid = f.type.startsWith('video/') || /\.(mp4|mkv|mov|avi|webm)$/i.test(f.name);
+  set('fpIcon','textContent', vid ? '🎬' : '🎵');
+  set('fpName','textContent', f.name);
+  set('fpMeta','textContent', fmtBytes(f.size) + '  ·  ' + (f.type || 'unknown'));
+  hide('dropzone'); show('filePill');
+  f.size > 200*1024*1024 ? show('sizeWarn') : hide('sizeWarn');
+  refreshTxBtn();
+}
+function clearFile() {
+  pickedFile = null;
+  document.getElementById('fileInput').value = '';
+  show('dropzone'); hide('filePill'); hide('sizeWarn');
+  refreshTxBtn();
+}
+
+// ── FILE MODE: Transcription ─────────────────
+async function startTranscription() {
+  if (!transcriber || !pickedFile) return;
+  cancelled = false; allChunks = [];
+  const txBox = document.getElementById('txBox');
+  txBox.textContent = '';
+  document.getElementById('tsBody').innerHTML = '';
+  document.getElementById('transcribeBtn').disabled = true;
+  show('cancelBtn'); show('procArea'); hide('resultsCard');
+  set('txBar','style.width','5%');
+  set('txLbl','textContent','Preparing audio…');
+
+  const url   = URL.createObjectURL(pickedFile);
+  const lang  = document.getElementById('langSelect').value || undefined;
+  const wantTs = document.getElementById('tsCheck').checked;
+  let nChunks  = 0;
+
+  try {
+    const result = await transcriber(url, {
+      language: lang, task: 'transcribe',
+      chunk_length_s: 28, stride_length_s: 5,
+      return_timestamps: wantTs,
+      chunk_callback: (chunk) => {
+        if (cancelled) return;
+        nChunks++; allChunks.push(chunk);
+        const est = Math.max(nChunks, Math.ceil((pickedFile.size/1024/1024)/3));
+        const pct = Math.min(99, Math.round((nChunks/est)*100));
+        set('txBar','style.width', pct+'%');
+        set('txLbl','textContent', pct+'% — segment '+nChunks);
+        set('chunkInfo','textContent','segment '+nChunks);
+        txBox.textContent = allChunks.map(c=>c.text).join(' ');
+        txBox.scrollTop = txBox.scrollHeight;
+        show('resultsCard');
+        updateWC(txBox.textContent, 'wordCount');
+      }
+    });
+    if (cancelled) { toast('Cancelled'); resetCtrl(); URL.revokeObjectURL(url); return; }
+    set('txBar','style.width','100%');
+    set('txLbl','textContent','✓ Complete!');
+    const full = result.text || allChunks.map(c=>c.text).join(' ');
+    txBox.textContent = full.trim();
+    updateWC(full, 'wordCount');
+    show('resultsCard');
+
+    if (wantTs && result.chunks?.length) {
+      show('tsSection');
+      const tb = document.getElementById('tsBody'); tb.innerHTML = '';
+      result.chunks.forEach(s => {
+        if (!s.text?.trim()) return;
+        const [a,b] = s.timestamp||[0,0];
+        const r = document.createElement('div'); r.className='ts-row';
+        r.innerHTML = `<span class="ts-t">${fmtT(a)}→${fmtT(b||a)}</span><span>${esc(s.text.trim())}</span>`;
+        tb.appendChild(r);
+      });
+    } else { hide('tsSection'); }
+    toast('✓ Capture complete!');
+  } catch(e) {
+    console.error(e);
+    if (!cancelled) toast('❌ Error: ' + (e.message||'Capture failed'));
+  } finally {
+    URL.revokeObjectURL(url); resetCtrl();
+  }
+}
+function cancelIt() { cancelled = true; toast('Cancelling…'); }
+function resetCtrl() {
+  hide('procArea'); hide('cancelBtn');
+  document.getElementById('transcribeBtn').disabled = false;
+  set('txBar','style.width','0%');
+}
+function refreshTxBtn() {
+  document.getElementById('transcribeBtn').disabled = !(transcriber && pickedFile);
+}
+function copyTx() {
+  const t = document.getElementById('txBox').textContent;
+  if(!t) return toast('Nothing to copy');
+  navigator.clipboard.writeText(t).then(()=>toast('📋 Copied!'));
+}
+function dlTxt() {
+  const t = document.getElementById('txBox').textContent;
+  if(!t) return toast('Nothing to download');
+  dl(t, (pickedFile?.name.replace(/\.[^/.]+$/,'') || 'capture')+'_edem.txt');
+}
+function resetAll() {
+  clearFile();
+  document.getElementById('txBox').textContent = '';
+  document.getElementById('tsBody').innerHTML = '';
+  hide('resultsCard'); hide('tsSection');
+  allChunks = [];
+}
+
+// ── LIVE MODE ────────────────────────────────
+function checkSpeechSupport() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { show('noSpeechSupport'); document.getElementById('micBtn').disabled = true; }
+  else     { hide('noSpeechSupport'); }
+}
+
+function toggleMic() {
+  if (isListening) stopMic(); else startMic();
+}
+
+function startMic() {
+  const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SR) { toast('Not supported in this browser'); return; }
+
+  recognition = new SR();
+  recognition.continuous     = true;
+  recognition.interimResults = true;
+  recognition.lang           = document.getElementById('liveLang').value;
+  recognition.maxAlternatives = 1;
+
+  recognition.onstart = () => {
+    isListening = true;
+    document.getElementById('micBtn').classList.replace('idle','recording');
+    set('micLabel','textContent','Tap to Stop');
+    show('liveStatus');
+    startTimer(); startVolMeter();
+  };
+
+  recognition.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const t = e.results[i][0].transcript;
+      if (e.results[i].isFinal) finalText += t + ' ';
+      else interim = t;
+    }
+    renderLiveBox(finalText, interim);
+    updateWC(finalText, 'liveWordCount');
+  };
+
+  recognition.onerror = (e) => {
+    if (e.error === 'not-allowed') toast('❌ Microphone access denied. Please allow mic in browser settings.');
+    else if (e.error !== 'aborted') toast('Mic error: ' + e.error);
+    stopMic();
+  };
+
+  recognition.onend = () => {
+    if (isListening) {
+      try { recognition.start(); } catch(_){}
+    }
+  };
+
+  try { recognition.start(); } catch(e) { toast('Could not start microphone'); }
+}
+
+function stopMic() {
+  isListening = false;
+  if (recognition) { recognition.onend = null; recognition.stop(); recognition = null; }
+  document.getElementById('micBtn').classList.replace('recording','idle');
+  set('micLabel','textContent','Tap to Start Listening');
+  hide('liveStatus');
+  stopTimer(); stopVolMeter();
+  renderLiveBox(finalText, '');
+}
+
+function renderLiveBox(final, interim) {
+  const box = document.getElementById('liveBox');
+  box.innerHTML = esc(final) + (interim ? `<span class="interim">${esc(interim)}</span>` : '');
+  box.scrollTop = box.scrollHeight;
+}
+
+function startTimer() {
+  elapsed = 0;
+  timerInt = setInterval(() => {
+    elapsed++;
+    const m = String(Math.floor(elapsed/60)).padStart(2,'0');
+    const s = String(elapsed%60).padStart(2,'0');
+    set('liveTimer','textContent', m+':'+s);
+  }, 1000);
+}
+function stopTimer() { clearInterval(timerInt); timerInt = null; }
+
+function startVolMeter() {
+  navigator.mediaDevices.getUserMedia({ audio: true }).then(stream => {
+    audioCtx  = new AudioContext();
+    analyser  = audioCtx.createAnalyser();
+    audioCtx.createMediaStreamSource(stream).connect(analyser);
+    analyser.fftSize = 256;
+    const data = new Uint8Array(analyser.frequencyBinCount);
+    volInterval = setInterval(() => {
+      analyser.getByteFrequencyData(data);
+      const avg = data.reduce((a,b)=>a+b,0) / data.length;
+      set('volFill','style.width', Math.min(100, avg*2.5)+'%');
+    }, 80);
+  }).catch(()=>{});
+}
+function stopVolMeter() {
+  clearInterval(volInterval);
+  if (audioCtx) { audioCtx.close(); audioCtx = null; }
+  set('volFill','style.width','0%');
+}
+
+function clearLive() {
+  finalText = '';
+  document.getElementById('liveBox').innerHTML = '';
+  set('liveWordCount','textContent','0 words');
+  set('liveTimer','textContent','00:00');
+}
+function copyLive() {
+  const t = finalText.trim();
+  if (!t) return toast('Nothing yet — start speaking first');
+  navigator.clipboard.writeText(t).then(()=>toast('📋 Copied!'));
+}
+function dlLive() {
+  const t = finalText.trim();
+  if (!t) return toast('Nothing to download');
+  dl(t, 'edem_live_capture.txt');
+}
+
+// ── Utilities ────────────────────────────────
+function show(id) { document.getElementById(id)?.classList.remove('hidden'); }
+function hide(id) { document.getElementById(id)?.classList.add('hidden'); }
+function set(id, prop, val) {
+  const el = document.getElementById(id); if(!el) return;
+  const parts = prop.split('.');
+  if (parts.length===2) el[parts[0]][parts[1]] = val;
+  else el[prop] = val;
+}
+function updateWC(text, id) {
+  const n = text.trim() ? text.trim().split(/\s+/).length : 0;
+  set(id,'textContent', n.toLocaleString()+' words');
+}
+function fmtBytes(b) {
+  if(b<1024) return b+' B';
+  if(b<1024**2) return (b/1024).toFixed(1)+' KB';
+  if(b<1024**3) return (b/1024**2).toFixed(1)+' MB';
+  return (b/1024**3).toFixed(2)+' GB';
+}
+function fmtT(s) {
+  const v=Math.round(s||0), m=Math.floor(v/60), r=v%60;
+  return String(m).padStart(2,'0')+':'+String(r).padStart(2,'0');
+}
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+function dl(text, name) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text],{type:'text/plain'}));
+  a.download = name; a.click(); URL.revokeObjectURL(a.href);
+}
+let _tt;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  clearTimeout(_tt); _tt = setTimeout(()=>el.classList.remove('show'), 3000);
+}
+</script>
+</body>
+</html>
