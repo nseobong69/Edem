@@ -959,44 +959,50 @@ function startMic() {
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   if (!SR) { toast('Not supported in this browser'); return; }
 
-  recognition = new SR();
-  recognition.continuous     = true;
-  recognition.interimResults = true;
-  recognition.lang           = document.getElementById('liveLang').value;
-  recognition.maxAlternatives = 1;
+  isListening = true;
+  document.getElementById('micBtn').classList.replace('idle','recording');
+  set('micLabel','textContent','Tap to Stop');
+  show('liveStatus');
+  // Only start timer & vol meter once — not on every restart
+  if (!timerInt) { startTimer(); startVolMeter(); }
 
-  recognition.onstart = () => {
-    isListening = true;
-    document.getElementById('micBtn').classList.replace('idle','recording');
-    set('micLabel','textContent','Tap to Stop');
-    show('liveStatus');
-    startTimer(); startVolMeter();
-  };
+  function createAndStart() {
+    if (!isListening) return;
+    recognition = new SR();
+    recognition.continuous      = true;
+    recognition.interimResults  = true;
+    recognition.lang            = document.getElementById('liveLang').value;
+    recognition.maxAlternatives = 1;
 
-  recognition.onresult = (e) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const t = e.results[i][0].transcript;
-      if (e.results[i].isFinal) finalText += t + ' ';
-      else interim = t;
-    }
-    renderLiveBox(finalText, interim);
-    updateWC(finalText, 'liveWordCount');
-  };
+    recognition.onresult = (e) => {
+      let interim = '';
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const t = e.results[i][0].transcript;
+        if (e.results[i].isFinal) finalText += t + ' ';
+        else interim = t;
+      }
+      renderLiveBox(finalText, interim);
+      updateWC(finalText, 'liveWordCount');
+    };
 
-  recognition.onerror = (e) => {
-    if (e.error === 'not-allowed') toast('❌ Microphone access denied. Please allow mic in browser settings.');
-    else if (e.error !== 'aborted') toast('Mic error: ' + e.error);
-    stopMic();
-  };
+    recognition.onerror = (e) => {
+      if (e.error === 'not-allowed') {
+        toast('❌ Microphone access denied. Allow mic in browser settings.');
+        stopMic(); return;
+      }
+      // Ignore 'no-speech' and 'aborted' — just restart
+    };
 
-  recognition.onend = () => {
-    if (isListening) {
-      try { recognition.start(); } catch(_){}
-    }
-  };
+    recognition.onend = () => {
+      // Browser ended session (normal on mobile) — restart immediately
+      if (isListening) setTimeout(createAndStart, 100);
+    };
 
-  try { recognition.start(); } catch(e) { toast('Could not start microphone'); }
+    try { recognition.start(); }
+    catch(e) { if (isListening) setTimeout(createAndStart, 300); }
+  }
+
+  createAndStart();
 }
 
 function stopMic() {
